@@ -143,13 +143,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Conv.hpp" />
-    <ClInclude Include="NeuralNetwork.hpp" />
-    <ClInclude Include="NeuralNetwork2.hpp" />
     <ClInclude Include="pong.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Conv.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>

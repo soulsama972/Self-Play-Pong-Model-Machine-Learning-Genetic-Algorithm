@@ -3,8 +3,6 @@
 #include"pong.hpp"
 #include<iostream>
 #include <chrono>
-#include"NeuralNetwork2.hpp"
-#include"Conv.hpp"
 #include <algorithm>
 #pragma comment(lib,"Engine.lib")
 
