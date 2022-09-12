@@ -8,14 +8,26 @@
 
 using namespace std::chrono_literals;
 
+
+
 #pragma warning (push)
 #pragma warning (disable : 28251)
 
+
+#define CONSOLE_SIZE (100 * 100)
+#define WIDTH 80
+#define HEIGHT 80
+#define BOARDSIZE (WIDTH * HEIGHT)
+#define NUM_OF_BALL_COLOR 2
+#define NUM_OF_ACTION 3
+#define QTABLE_SIZE ((BOARDSIZE * WIDTH) * NUM_OF_BALL_COLOR)
+using u32 = unsigned int;
 
 float MinMax(float x, float min, float max)
 {
 	return (x - min) / (max - min) * 2 - 1;
 }
+
 void PutText(char* screen,u32 index, const char* format, ...)
 {
 	std::va_list va;
@@ -49,6 +61,7 @@ HANDLE InitConsole()
 		assert("error 2");
 	return hConsole;
 }
+
 struct MyQTable
 {
 	double action[3];
@@ -68,6 +81,7 @@ void saveToFile(const std::vector<MyQTable>qtable,std::string fileName,unsigned 
 		out.close();
 	}
 }
+
 void loadFromFile(std::vector<MyQTable>&qtable,std::string fileName, unsigned int len)
 {
 	std::ifstream in(fileName, std::ios::in);
@@ -82,19 +96,20 @@ void loadFromFile(std::vector<MyQTable>&qtable,std::string fileName, unsigned in
 		in.close();
 	}
 }
+
 inline __int64 getQTableIndex(const State state)
 {
-	return (state.ballState * 80 * 80 * 80) + (static_cast<__int64>(state.pX) * 80 * 80) + (static_cast<__int64>(state.bY ) * 80) + state.bX;
+	return static_cast<__int64>(state.ballState * static_cast<__int64>(pow(WIDTH, 3)) + state.pX * BOARDSIZE + state.bY * WIDTH + state.bX);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	std::vector<MyQTable>qTable;
-	qTable.reserve(80 * 80 * 80 * 2);
+	qTable.reserve(QTABLE_SIZE);
 	Window  window;
 	const fVec2 screen = fVec2(800, 800);
 	window.Init(L"window", screen);
-	Init(&window);
+	//Init(&window);
 	Texture2D::Bind(&window);
 	Camera::Bind(&window);
 	std::default_random_engine generator;
@@ -103,15 +118,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	bool render;
 	pong * p = new pong(screen);
 	DWORD l;
-	char *cScreen = new char[100*100];
-	memset(cScreen, 0, 100 * 100);
+	char *cScreen = new char[CONSOLE_SIZE];
+	memset(cScreen, 0, CONSOLE_SIZE);
 	HANDLE  hConsole = InitConsole();
 	int bestScore = 0;
-	std::string qtFile = "test.q2";
+	std::string qtFile = "";
+	
 	if (qtFile.empty())
 	{
 		MyQTable qt;
-		for (size_t i = 0; i < 80 * 80 *80 * 2; i++)
+		for (size_t i = 0; i < QTABLE_SIZE; i++)
 		{
 			for (int j = 0; j < 3; j++)
 			{
@@ -124,7 +140,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	else
 	{
-		loadFromFile(qTable, qtFile,2*80*80*80);
+		loadFromFile(qTable, qtFile, QTABLE_SIZE);
 	}
 	for(int j = 0;j<1000;j++)
 	{
@@ -134,10 +150,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				render = true;
 			else
 				render = false;
+			
 			render = 1;
 			int episode_reward = 0;
 			PutText(cScreen, 0, "best score %d", bestScore);
-			WriteConsoleOutputCharacterA(hConsole, cScreen, 100 * 100, { 0,0 }, &l);
+			WriteConsoleOutputCharacterA(hConsole, cScreen, BOARDSIZE, { 0,0 }, &l);
+			
 			while (true)
 			{
 				if (render)
@@ -149,16 +167,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 				State state = p->getState();
 				__int64 QIndex = getQTableIndex(state);
-				int action = 0;
-				if (random(generator) > p->epsilon)
-					action = argMax(qTable[QIndex].action, 3);
-				else
-					action = rand() % 3;
+				int action = (random(generator) > p->epsilon) ? argMax(qTable[QIndex].action, NUM_OF_ACTION) : rand() % NUM_OF_ACTION;
 
 				p->update(action);
 				State newState = p->getState();
+
 				__int64 newQIndex = getQTableIndex(newState);
-				double max_q = *std::max_element(qTable[newQIndex].action,qTable[newQIndex].action + 3);
+				double max_q = *std::max_element(qTable[newQIndex].action,qTable[newQIndex].action + NUM_OF_ACTION);
 				double current_q = qTable[QIndex].action[action];
 
 				if (newState.reward == p->HIT_REWARD || newState.reward == p->DIE_PENALTY)
@@ -169,8 +184,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					qTable[QIndex].action[action] = newQ;
 				}
 				episode_reward += newState.reward;
+				
 				if (newState.done)
 					break;
+				
 				if (render)
 				{
 					p->draw();
@@ -182,9 +199,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			p->epsilon *= p->iter_decay;
 			p->rest();
 		}
-		p->epsilon = 0.9;
 	}
-	saveToFile(qTable, "test.q3" , 2 * 80 * 80 * 80);
+	
+	saveToFile(qTable, "test.q3" , QTABLE_SIZE);
 	CloseHandle(hConsole);
 	delete[] cScreen;
 	return 0;
