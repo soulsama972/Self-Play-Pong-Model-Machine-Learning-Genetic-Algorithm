@@ -9,4 +9,4 @@ Built a pong game using 𝐦𝐲 𝐨𝐰𝐧 𝐠𝐫𝐚𝐩𝐡𝐢𝐜 wrapp
 
 ## Video Example
 
-<img src="HorseRiding(1).gif" width="70%" height="50%" />
+<img src="Self_Play_Pong_Model_.gif" width="70%" height="50%" />
