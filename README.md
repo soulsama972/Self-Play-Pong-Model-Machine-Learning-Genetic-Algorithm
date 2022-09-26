@@ -7,4 +7,6 @@ Built a pong game using 𝐦𝐲 𝐨𝐰𝐧 𝐠𝐫𝐚𝐩𝐡𝐢𝐜 wrapp
 * Avoiding the red food
 
 
-## Example
+## Video Example
+
+<img src="HorseRiding(1).gif" width="70%" height="50%" />
